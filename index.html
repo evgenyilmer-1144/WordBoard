@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WordBoard — English Vocabulary Trainer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7C5CFC">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WordBoard">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -98,7 +104,7 @@
   .card .row{ display:flex; justify-content:center; gap:6px; margin-top:8px; }
   .icon-btn{
     background:var(--bg-panel-2); border:2px solid var(--border); color:var(--ink-dim);
-    width:28px; height:28px; border-radius:9px; cursor:pointer; font-size:0.8rem;
+    width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:0.9rem;
   }
   .icon-btn:hover{ border-color:var(--purple); color:var(--purple-dark); }
   .icon-btn.danger:hover{ border-color:var(--coral); color:var(--coral); }
@@ -197,6 +203,23 @@
   }
   .modal-box p{ margin:0 0 18px; color:var(--ink); font-weight:600; }
   .modal-actions{ display:flex; gap:10px; justify-content:center; }
+
+  @media (max-width: 480px){
+    .app{ padding:14px 12px 40px; }
+    header{ flex-direction:column; align-items:flex-start; gap:10px; }
+    nav{ width:100%; }
+    nav button{ flex:1; min-width:0; padding:10px 8px; font-size:0.82rem; text-align:center; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .toolbar .count-pill{ text-align:center; }
+    .grid{ grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); gap:10px; }
+    .square{ font-size:2.4rem; }
+    .squares.solved .square{ width:80%; max-width:200px; }
+    .practice-wrap{ max-width:100%; }
+    .controls{ gap:8px; }
+    .controls button{ flex:1; }
+    .panel{ padding:18px; }
+    .modal-box{ max-width:90vw; }
+  }
 </style>
 </head>
 <body>
@@ -348,10 +371,11 @@
 
 <script>
 /* ============ SUPABASE CONFIG — fill these in from your project settings ============ */
-const SUPABASE_URL = 'https://hkdzqahmjqfhaxpljonl.supabase.co';       // e.g. https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZHpxYWhtanFmaGF4cGxqb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDA0MDYsImV4cCI6MjEwMDcxNjQwNn0.Q66xpxqoD-Ep4G5MMrUBXjhiTfv_hTGc7fEQq37AQt4';     // the "anon public" key
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';       // e.g. https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';     // the "anon public" key
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 /* ===================================================================================== */
+
 const PIN_COLORS = ["#7C5CFC","#FFC94A","#2FBF93","#FF6B6B"];
 const QUICK_EMOJI = ["🐕","🐈","🐦","🍎","🍌","📖","✏️","🚗","☀️","🌙","😊","😢","❤️","🏠","🎂","⚽","🎈","🔑","👕","🚌","🍕","☕","⭐","🌳","🎩","🦶","🖊","👶","🚆","🏫"];
 
@@ -1000,6 +1024,14 @@ buildEmojiPicker();
     await onLoggedIn(data.session.user);
   }
 })();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(err=>{
+      console.error('Service worker registration failed', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
