@@ -211,8 +211,16 @@
       <input type="email" id="authEmail" placeholder="you@example.com">
     </div>
     <div class="field">
+      <label for="authName">Your name</label>
+      <input type="text" id="authName" placeholder="e.g. Evgeny">
+    </div>
+    <div class="field">
       <label for="authPassword">Password</label>
-      <input type="password" id="authPassword" placeholder="At least 6 characters">
+      <div style="position:relative;">
+        <input type="password" id="authPassword" placeholder="At least 6 characters" style="padding-right:44px;">
+        <button type="button" id="togglePasswordBtn" title="Show password"
+          style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; padding:6px;">👁</button>
+      </div>
     </div>
     <div class="save-row">
       <button class="cta-gold" id="authLoginBtn" type="button">Log In</button>
@@ -344,7 +352,6 @@ const SUPABASE_URL = 'https://hkdzqahmjqfhaxpljonl.supabase.co';       // e.g. h
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZHpxYWhtanFmaGF4cGxqb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDA0MDYsImV4cCI6MjEwMDcxNjQwNn0.Q66xpxqoD-Ep4G5MMrUBXjhiTfv_hTGc7fEQq37AQt4';     // the "anon public" key
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 /* ===================================================================================== */
-
 const PIN_COLORS = ["#7C5CFC","#FFC94A","#2FBF93","#FF6B6B"];
 const QUICK_EMOJI = ["🐕","🐈","🐦","🍎","🍌","📖","✏️","🚗","☀️","🌙","😊","😢","❤️","🏠","🎂","⚽","🎈","🔑","👕","🚌","🍕","☕","⭐","🌳","🎩","🦶","🖊","👶","🚆","🏫"];
 
@@ -837,19 +844,44 @@ async function onLoggedIn(user){
 
 async function handleSignup(){
   const email = document.getElementById('authEmail').value.trim();
+  const name = document.getElementById('authName').value.trim();
   const password = document.getElementById('authPassword').value;
   const hint = document.getElementById('authHint');
-  if(!email || password.length < 6){ hint.textContent = 'Enter an email and a password of at least 6 characters.'; return; }
+
+  if(!email){ hint.textContent = 'Enter an email.'; return; }
+  if(!name){ hint.textContent = 'Enter a name.'; return; }
+  if(password.length < 6){ hint.textContent = 'Password must be at least 6 characters.'; return; }
+
+  hint.textContent = 'Checking name availability…';
+  const { data: taken, error: checkErr } = await supabaseClient.rpc('is_name_taken', { check_name: name });
+  if(checkErr){ hint.textContent = 'Could not verify that name right now — please try again.'; return; }
+  if(taken){ hint.textContent = 'That name is already taken — please choose a different one.'; return; }
+
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if(error){ hint.textContent = error.message; return; }
-  if(data.session){ await onLoggedIn(data.user); }
-  else { hint.textContent = 'Check your email to confirm your account, then log in.'; }
+
+  if(data.session){
+    const { error: profileErr } = await supabaseClient.from('profiles').insert({ id: data.user.id, name });
+    if(profileErr){
+      hint.textContent = profileErr.message.toLowerCase().includes('duplicate')
+        ? 'That name was just taken by someone else — please log in and try a different name.'
+        : 'Account created, but your name could not be saved. You can still use the app.';
+    } else {
+      hint.textContent = '';
+    }
+    showToast(`Welcome, ${name}! Account created ✓`, 'success');
+    await onLoggedIn(data.user);
+  } else {
+    hint.textContent = 'Check your email to confirm your account, then log in.';
+    showToast('Account created ✓', 'success');
+  }
 }
 
 async function handleLogin(){
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const hint = document.getElementById('authHint');
+  if(!email){ hint.textContent = 'Enter your email.'; return; }
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if(error){ hint.textContent = error.message; return; }
   await onLoggedIn(data.user);
@@ -866,6 +898,15 @@ async function handleLogout(){
 /* ---- Wire up ---- */
 document.getElementById('authLoginBtn').addEventListener('click', handleLogin);
 document.getElementById('authSignupBtn').addEventListener('click', handleSignup);
+document.getElementById('togglePasswordBtn').addEventListener('click', ()=>{
+  const pwInput = document.getElementById('authPassword');
+  const btn = document.getElementById('togglePasswordBtn');
+  if(pwInput.type === 'password'){
+    pwInput.type = 'text'; btn.textContent = '🙈'; btn.title = 'Hide password';
+  } else {
+    pwInput.type = 'password'; btn.textContent = '👁'; btn.title = 'Show password';
+  }
+});
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
 document.querySelectorAll('nav button[data-view]').forEach(btn=>{
