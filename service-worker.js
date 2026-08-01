@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wordboard-shell-v2';
+const CACHE_NAME = 'pikchuz-shell-v2';
 const SHELL_FILES = ['./manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,28 +17,22 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Network-first for everything: always try to get the freshest copy of any
+// file (page, manifest, icons) first, so updates you push always show up
+// right away. Only fall back to the last saved copy if there's genuinely
+// no internet connection.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // The app's own page: always get the freshest copy from the network first,
-  // so any update you push shows up immediately. Only fall back to the last
-  // saved copy if there's genuinely no internet connection.
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Static assets (icons, manifest): fine to serve from cache first.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
+
 
