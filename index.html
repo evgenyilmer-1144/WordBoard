@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pikchuz — Boost Your Vocabulary</title>
+<title>Pikchuz — Vocabulary Trainer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7C5CFC">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pikchuz">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -98,7 +104,7 @@
   .card .row{ display:flex; justify-content:center; gap:6px; margin-top:8px; }
   .icon-btn{
     background:var(--bg-panel-2); border:2px solid var(--border); color:var(--ink-dim);
-    width:28px; height:28px; border-radius:9px; cursor:pointer; font-size:0.8rem;
+    width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:0.9rem;
   }
   .icon-btn:hover{ border-color:var(--purple); color:var(--purple-dark); }
   .icon-btn.danger:hover{ border-color:var(--coral); color:var(--coral); }
@@ -197,9 +203,31 @@
   }
   .modal-box p{ margin:0 0 18px; color:var(--ink); font-weight:600; }
   .modal-actions{ display:flex; gap:10px; justify-content:center; }
+  .fatal-banner{
+    display:none; background:var(--coral); color:#fff; padding:14px 18px; border-radius:12px;
+    margin:16px auto; max-width:520px; font-weight:700; text-align:center; font-size:0.9rem;
+  }
+
+  @media (max-width: 480px){
+    .app{ padding:14px 12px 40px; }
+    header{ flex-direction:column; align-items:flex-start; gap:10px; }
+    nav{ width:100%; }
+    nav button{ flex:1; min-width:0; padding:10px 8px; font-size:0.82rem; text-align:center; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .toolbar .count-pill{ text-align:center; }
+    .grid{ grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); gap:10px; }
+    .square{ font-size:2.4rem; }
+    .squares.solved .square{ width:80%; max-width:200px; }
+    .practice-wrap{ max-width:100%; }
+    .controls{ gap:8px; }
+    .controls button{ flex:1; }
+    .panel{ padding:18px; }
+    .modal-box{ max-width:90vw; }
+  }
 </style>
 </head>
 <body>
+<div id="fatalBanner" class="fatal-banner"></div>
 
 <!-- AUTH GATE -->
 <section id="view-auth" class="visible">
@@ -212,7 +240,7 @@
     </div>
     <div class="field">
       <label for="authName">Your name</label>
-      <input type="text" id="authName" placeholder="e.g. Name">
+      <input type="text" id="authName" placeholder="e.g. MyName">
     </div>
     <div class="field">
       <label for="authPassword">Password</label>
@@ -235,7 +263,7 @@
   <header>
     <div class="brand">
       <h1>Pikchuz</h1>
-      <span class="tag">learn one card at a time</span>
+      <span class="tag">learn English, one card at a time</span>
     </div>
     <nav>
       <button data-view="library" class="active">My Vocabulary</button>
@@ -347,11 +375,39 @@
 </div>
 
 <script>
+/* Catch-all safety net: if anything anywhere in this app throws an error we
+   didn't anticipate, show it on screen instead of the page silently doing
+   nothing. Registered first, before anything risky runs. */
+function showFatalError(message){
+  const el = document.getElementById('fatalBanner');
+  if(!el) return;
+  if(el.style.display === 'block') return; // keep the first, real cause — don't let a follow-on error hide it
+  el.textContent = 'Something went wrong: ' + message + ' — please screenshot this message.';
+  el.style.display = 'block';
+}
+window.addEventListener('error', (e)=> showFatalError(e.message || 'an unknown error occurred'));
+window.addEventListener('unhandledrejection', (e)=>{
+  const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
+  showFatalError(msg);
+});
+
 /* ============ SUPABASE CONFIG — fill these in from your project settings ============ */
 const SUPABASE_URL = 'https://hkdzqahmjqfhaxpljonl.supabase.co';       // e.g. https://xxxxx.supabase.co
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZHpxYWhtanFmaGF4cGxqb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDA0MDYsImV4cCI6MjEwMDcxNjQwNn0.Q66xpxqoD-Ep4G5MMrUBXjhiTfv_hTGc7fEQq37AQt4';     // the "anon public" key
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient = null;
+try{
+  if(typeof supabase === 'undefined'){
+    throw new Error('The Supabase library did not load (check your internet connection and reload the page)');
+  }
+  if(SUPABASE_URL.includes('YOUR_SUPABASE') || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')){
+    throw new Error('The app is missing its Supabase URL/key — these placeholders were never filled in');
+  }
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}catch(e){
+  showFatalError(e.message);
+}
 /* ===================================================================================== */
+
 const PIN_COLORS = ["#7C5CFC","#FFC94A","#2FBF93","#FF6B6B"];
 const QUICK_EMOJI = ["🐕","🐈","🐦","🍎","🍌","📖","✏️","🚗","☀️","🌙","😊","😢","❤️","🏠","🎂","⚽","🎈","🔑","👕","🚌","🍕","☕","⭐","🌳","🎩","🦶","🖊","👶","🚆","🏫"];
 
@@ -842,50 +898,84 @@ async function onLoggedIn(user){
   renderLibrary();
 }
 
+function setAuthHint(message, isError){
+  const hint = document.getElementById('authHint');
+  hint.textContent = message;
+  hint.style.color = isError ? 'var(--coral)' : 'var(--ink-dim)';
+  hint.style.fontWeight = isError ? '700' : '400';
+}
+
 async function handleSignup(){
+  if(!supabaseClient){ setAuthHint('The app could not connect to the database — reload the page, or check the error banner above.', true); return; }
   const email = document.getElementById('authEmail').value.trim();
   const name = document.getElementById('authName').value.trim();
   const password = document.getElementById('authPassword').value;
-  const hint = document.getElementById('authHint');
+  const btn = document.getElementById('authSignupBtn');
 
-  if(!email){ hint.textContent = 'Enter an email.'; return; }
-  if(!name){ hint.textContent = 'Enter a name.'; return; }
-  if(password.length < 6){ hint.textContent = 'Password must be at least 6 characters.'; return; }
+  if(!email){ setAuthHint('Enter an email.', true); return; }
+  if(!name){ setAuthHint('Enter a name.', true); return; }
+  if(password.length < 6){ setAuthHint('Password must be at least 6 characters.', true); return; }
 
-  hint.textContent = 'Checking name availability…';
+  btn.disabled = true;
+  document.getElementById('authLoginBtn').disabled = true;
+  setAuthHint('Checking name availability…', false);
+
   const { data: taken, error: checkErr } = await supabaseClient.rpc('is_name_taken', { check_name: name });
-  if(checkErr){ hint.textContent = 'Could not verify that name right now — please try again.'; return; }
-  if(taken){ hint.textContent = 'That name is already taken — please choose a different one.'; return; }
+  if(checkErr){ setAuthHint('Could not verify that name right now — please try again.', true); btn.disabled=false; document.getElementById('authLoginBtn').disabled=false; return; }
+  if(taken){ setAuthHint('That name is already taken — please choose a different one.', true); btn.disabled=false; document.getElementById('authLoginBtn').disabled=false; return; }
 
+  setAuthHint('Creating your account…', false);
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
-  if(error){ hint.textContent = error.message; return; }
+  if(error){ setAuthHint(error.message, true); btn.disabled=false; document.getElementById('authLoginBtn').disabled=false; return; }
 
   if(data.session){
     const { error: profileErr } = await supabaseClient.from('profiles').insert({ id: data.user.id, name });
     if(profileErr){
-      hint.textContent = profileErr.message.toLowerCase().includes('duplicate')
-        ? 'That name was just taken by someone else — please log in and try a different name.'
-        : 'Account created, but your name could not be saved. You can still use the app.';
+      setAuthHint(
+        profileErr.message.toLowerCase().includes('duplicate')
+          ? 'That name was just taken by someone else — please log in and try a different name.'
+          : 'Account created, but your name could not be saved. You can still use the app.',
+        true
+      );
     } else {
-      hint.textContent = '';
+      setAuthHint('', false);
     }
     showToast(`Welcome, ${name}! Account created ✓`, 'success');
     await onLoggedIn(data.user);
   } else {
-    hint.textContent = 'Check your email to confirm your account, then log in.';
+    setAuthHint('Check your email to confirm your account, then log in.', false);
     showToast('Account created ✓', 'success');
   }
+  btn.disabled = false;
+  document.getElementById('authLoginBtn').disabled = false;
 }
 
 async function handleLogin(){
+  if(!supabaseClient){ setAuthHint('The app could not connect to the database — reload the page, or check the error banner above.', true); return; }
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  const hint = document.getElementById('authHint');
-  if(!email){ hint.textContent = 'Enter your email.'; return; }
+  const btn = document.getElementById('authLoginBtn');
+
+  if(!email){ setAuthHint('Enter your email.', true); return; }
+  if(!password){ setAuthHint('Enter your password.', true); return; }
+
+  btn.disabled = true;
+  document.getElementById('authSignupBtn').disabled = true;
+  setAuthHint('Logging in…', false);
+
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error){ hint.textContent = error.message; return; }
+  if(error){
+    setAuthHint('Login failed: ' + error.message, true);
+    btn.disabled = false;
+    document.getElementById('authSignupBtn').disabled = false;
+    return;
+  }
+  setAuthHint('', false);
   await onLoggedIn(data.user);
+  btn.disabled = false;
+  document.getElementById('authSignupBtn').disabled = false;
 }
+
 
 async function handleLogout(){
   await supabaseClient.auth.signOut();
@@ -995,11 +1085,20 @@ document.getElementById('modalCancelBtn').addEventListener('click', hideConfirm)
 
 buildEmojiPicker();
 (async ()=>{
+  if(!supabaseClient) return; // already reported via the banner above — don't fail a second time here
   const { data } = await supabaseClient.auth.getSession();
   if(data && data.session && data.session.user){
     await onLoggedIn(data.session.user);
   }
 })();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(err=>{
+      console.error('Service worker registration failed', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
