@@ -51,15 +51,6 @@
     margin:0; letter-spacing:0.2px; color: var(--purple-dark);
   }
   .brand .tag{ color:var(--ink-dim); font-size:0.85rem; }
-  .header-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-  .lang-switch{ display:flex; gap:4px; }
-  .lang-switch button{
-    background:var(--bg-panel-2); border:2px solid var(--border); color:var(--ink-dim);
-    padding:5px 13px; border-radius:999px; font:inherit; font-size:0.78rem; font-weight:700;
-    cursor:pointer; transition:.15s; letter-spacing:0.03em;
-  }
-  .lang-switch button:hover{ border-color:var(--purple); color:var(--purple-dark); }
-  .lang-switch button.active{ background:var(--purple); color:#fff; border-color:var(--purple); }
   nav{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   nav button{
     background:var(--bg-panel); border:2px solid var(--border); color:var(--ink-dim);
@@ -238,7 +229,6 @@
   @media (max-width: 480px){
     .app{ padding:14px 12px 40px; }
     header{ flex-direction:column; align-items:flex-start; gap:10px; }
-    .header-right{ align-items:flex-start; width:100%; }
     nav{ width:100%; }
     nav button{ flex:1; min-width:0; padding:10px 8px; font-size:0.82rem; text-align:center; }
     .toolbar{ flex-direction:column; align-items:stretch; }
@@ -291,20 +281,14 @@
   <header>
     <div class="brand">
       <h1>Pikchuz</h1>
-      <span class="tag">learn a language, one card at a time</span>
+      <span class="tag">learn English, one card at a time</span>
     </div>
-    <div class="header-right">
-      <div class="lang-switch" id="langSwitch">
-        <button data-lang="en" class="active" type="button">EN</button>
-        <button data-lang="ru" type="button">RU</button>
-      </div>
-      <nav>
-        <button data-view="library" class="active">My Vocabulary</button>
-        <button data-view="add">Add Word</button>
-        <button data-view="practice">Practice</button>
-        <button id="logoutBtn" type="button">Log Out</button>
-      </nav>
-    </div>
+    <nav>
+      <button data-view="library" class="active">My Vocabulary</button>
+      <button data-view="add">Add Word</button>
+      <button data-view="practice">Practice</button>
+      <button id="logoutBtn" type="button">Log Out</button>
+    </nav>
   </header>
 
   <!-- LIBRARY -->
@@ -426,8 +410,8 @@ window.addEventListener('unhandledrejection', (e)=>{
 });
 
 /* ============ SUPABASE CONFIG — fill these in from your project settings ============ */
-const SUPABASE_URL = 'https://hkdzqahmjqfhaxpljonl.supabase.co';       // e.g. https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZHpxYWhtanFmaGF4cGxqb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDA0MDYsImV4cCI6MjEwMDcxNjQwNn0.Q66xpxqoD-Ep4G5MMrUBXjhiTfv_hTGc7fEQq37AQt4';     // the "anon public" keylet supabaseClient = null;
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';       // e.g. https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';     // the "anon public" key
 let supabaseClient = null;
 try{
   if(typeof supabase === 'undefined'){
@@ -445,7 +429,7 @@ try{
 const PIN_COLORS = ["#7C5CFC","#FFC94A","#2FBF93","#FF6B6B"];
 const QUICK_EMOJI = ["🐕","🐈","🐦","🍎","🍌","📖","✏️","🚗","☀️","🌙","😊","😢","❤️","🏠","🎂","⚽","🎈","🔑","👕","🚌","🍕","☕","⭐","🌳","🎩","🦶","🖊","👶","🚆","🏫"];
 
-const STARTER_EN = [
+const STARTER = [
 ["dog","🐕"],["cat","🐈"],["bird","🐦"],["fish","🐟"],["horse","🐎"],["cow","🐄"],["pig","🐖"],
 ["sheep","🐑"],["lion","🦁"],["tiger","🐯"],["elephant","🐘"],["monkey","🐒"],["bear","🐻"],
 ["apple","🍎"],["banana","🍌"],["orange","🍊"],["bread","🍞"],["cheese","🧀"],["egg","🥚"],
@@ -463,29 +447,7 @@ const STARTER_EN = [
 ["house","🏠"],["school","🏫"],["city","🏙"],["park","🏞"],["garden","🪴"],["forest","🌲"],["beach","🏖"],["road","🛣"],["bridge","🌉"],["island","🏝"]
 ];
 
-const STARTER_RU = [
-["собака","🐕"],["кошка","🐈"],["птица","🐦"],["рыба","🐟"],["лошадь","🐎"],["корова","🐄"],["свинья","🐖"],
-["овца","🐑"],["лев","🦁"],["тигр","🐯"],["слон","🐘"],["обезьяна","🐒"],["медведь","🐻"],
-["яблоко","🍎"],["банан","🍌"],["апельсин","🍊"],["хлеб","🍞"],["сыр","🧀"],["яйцо","🥚"],
-["молоко","🥛"],["вода","💧"],["рис","🍚"],["мясо","🥩"],["торт","🎂"],["пицца","🍕"],["кофе","☕"],
-["мама","👩"],["папа","👨"],["малыш","👶"],["мальчик","👦"],["девочка","👧"],["семья","👪"],
-["друг","🤝"],["учитель","🎓"],["врач","🩺"],
-["книга","📖"],["ручка","🖊"],["карандаш","✏️"],["стул","🪑"],["кровать","🛏"],["дверь","🚪"],
-["окно","🪟"],["ключ","🔑"],["телефон","📱"],["компьютер","💻"],["часы","⏰"],
-["солнце","☀️"],["луна","🌙"],["звезда","⭐"],["облако","☁️"],["дождь","🌧"],["снег","❄️"],["дерево","🌳"],["цветок","🌸"],
-["глаз","👁"],["ухо","👂"],["нос","👃"],["рот","👄"],["рука","✋"],["нога","🦶"],["зуб","🦷"],["сердце","❤️"],
-["рубашка","👕"],["брюки","👖"],["туфля","👟"],["шляпа","🎩"],["платье","👗"],["носок","🧦"],
-["машина","🚗"],["автобус","🚌"],["поезд","🚆"],["самолёт","✈️"],["велосипед","🚲"],["лодка","⛵"],
-["один","1️⃣"],["два","2️⃣"],["три","3️⃣"],["четыре","4️⃣"],["пять","5️⃣"],["шесть","6️⃣"],["семь","7️⃣"],["восемь","8️⃣"],["девять","9️⃣"],["десять","🔟"],
-["счастливый","😊"],["грустный","😢"],["злой","😠"],["удивлённый","😲"],["усталый","😴"],["взволнованный","🤩"],
-["дом","🏠"],["школа","🏫"],["город","🏙"],["парк","🏞"],["сад","🪴"],["лес","🌲"],["пляж","🏖"],["дорога","🛣"],["мост","🌉"],["остров","🏝"]
-];
-
-const STARTER_SETS = { en: STARTER_EN, ru: STARTER_RU };
-const LANG_VOICE_MAP = { en: 'en-US', ru: 'ru-RU' };
-
 let currentUser = null;
-let currentLanguage = 'en';
 let vocab = [];
 let currentRep = "emoji";
 let pendingAddPhoto = null;
@@ -526,20 +488,16 @@ function pinColor(id){
 }
 
 function mapRow(row){
-  return { id: row.id, word: row.word, type: row.type, value: row.value, photo_data: row.photo_data, learned: row.learned, language: row.language };
+  return { id: row.id, word: row.word, type: row.type, value: row.value, photo_data: row.photo_data, learned: row.learned };
 }
 
 /* ---- Data loading, now backed by Supabase instead of window.storage ---- */
 async function loadVocab(){
-  const { data, error } = await supabaseClient.from('words')
-    .select('*').eq('user_id', currentUser.id).eq('language', currentLanguage);
+  const { data, error } = await supabaseClient.from('words').select('*').eq('user_id', currentUser.id);
   if(error){ showToast('Could not load your vocabulary.', 'error'); vocab = []; return; }
 
   if(!data || data.length === 0){
-    const starter = STARTER_SETS[currentLanguage] || STARTER_EN;
-    const rows = starter.map(([word, emoji]) => ({
-      user_id: currentUser.id, word, type:'emoji', value: emoji, learned:false, language: currentLanguage
-    }));
+    const rows = STARTER.map(([word, emoji]) => ({ user_id: currentUser.id, word, type:'emoji', value: emoji, learned:false }));
     const { data: inserted, error: insErr } = await supabaseClient.from('words').insert(rows).select();
     if(insErr){ showToast('Could not set up your starter vocabulary.', 'error'); vocab = []; return; }
     vocab = inserted.map(mapRow);
@@ -549,8 +507,7 @@ async function loadVocab(){
 }
 
 async function loadRunState(){
-  const { data, error } = await supabaseClient.from('practice_runs').select('*')
-    .eq('user_id', currentUser.id).eq('language', currentLanguage).maybeSingle();
+  const { data, error } = await supabaseClient.from('practice_runs').select('*').eq('user_id', currentUser.id).maybeSingle();
   if(error || !data){ runState = null; streakCount = 0; streakStars = 0; bestStreak = 0; return; }
   runState = { activeIds: data.active_ids || [], testedIds: data.tested_ids || [] };
   streakCount = data.streak_count || 0;
@@ -560,7 +517,6 @@ async function loadRunState(){
 async function saveRunState(){
   const { error } = await supabaseClient.from('practice_runs').upsert({
     user_id: currentUser.id,
-    language: currentLanguage,
     active_ids: runState.activeIds,
     tested_ids: runState.testedIds,
     streak_count: streakCount,
@@ -643,7 +599,7 @@ function speak(word){
   }
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(word);
-  u.lang = LANG_VOICE_MAP[currentLanguage] || 'en-US';
+  u.lang = 'en-US';
   u.rate = 0.9;
   window.speechSynthesis.speak(u);
 }
@@ -720,8 +676,7 @@ async function commitSaveWord(word, type, value){
     word, type,
     value: type === 'photo' ? null : value,
     photo_data: type === 'photo' ? pendingAddPhoto : null,
-    learned: false,
-    language: currentLanguage
+    learned: false
   };
   const { data, error } = await supabaseClient.from('words').insert(payload).select().single();
   if(error){
@@ -1024,31 +979,9 @@ async function onLoggedIn(user){
   currentUser = user;
   document.getElementById('view-auth').classList.remove('visible');
   document.getElementById('appMain').style.display = 'block';
-
-  const { data: profile } = await supabaseClient.from('profiles').select('current_language').eq('id', user.id).maybeSingle();
-  currentLanguage = (profile && profile.current_language) || 'en';
-  updateLangSwitchUI();
-
   await loadVocab();
   await loadRunState();
   renderLibrary();
-}
-
-function updateLangSwitchUI(){
-  document.querySelectorAll('#langSwitch button').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
-  });
-}
-
-async function switchLanguage(lang){
-  if(lang === currentLanguage) return;
-  currentLanguage = lang;
-  updateLangSwitchUI();
-  supabaseClient.from('profiles').update({ current_language: lang }).eq('id', currentUser.id)
-    .then(({error}) => { if(error) console.error('Could not save language preference', error); });
-  await loadVocab();
-  await loadRunState();
-  switchView('library');
 }
 
 function setAuthHint(message, isError){
@@ -1133,7 +1066,6 @@ async function handleLogin(){
 async function handleLogout(){
   await supabaseClient.auth.signOut();
   currentUser = null;
-  currentLanguage = 'en';
   vocab = []; runState = null;
   document.getElementById('appMain').style.display = 'none';
   document.getElementById('view-auth').classList.add('visible');
@@ -1152,9 +1084,6 @@ document.getElementById('togglePasswordBtn').addEventListener('click', ()=>{
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-document.querySelectorAll('#langSwitch button').forEach(btn=>{
-  btn.addEventListener('click', ()=> switchLanguage(btn.dataset.lang));
-});
 
 document.querySelectorAll('nav button[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=> switchView(btn.dataset.view));
